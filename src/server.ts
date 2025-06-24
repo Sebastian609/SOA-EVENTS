@@ -1,6 +1,5 @@
 import express from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
 import { AppDataSource } from "./infrastructure/database/database";
 import { setupSwagger } from "./config/swagger";
 
@@ -24,20 +23,10 @@ import { EventsRoute } from './routes/events.routes';
 import { LocationsRoute } from './routes/locations.routes';
 import { EventLocationsRoute } from './routes/event_locations.routes';
 
-import { SocketRoutes } from "./routes/socket.routes";
-import { SocketController } from "./infrastructure/controller/socket.controller";
-import { SocketService } from "./service/socket.service";
-
 const port = process.env.PORT;
 const app = express();
 const httpServer = createServer(app);
 setupSwagger(app);
-
-const io = new Server(httpServer, {
-  cors: {
-    origin: "*",
-  },
-});
 
 // Instancias
 const eventRepo = new EventRepository(AppDataSource.getRepository(Event));
@@ -52,20 +41,11 @@ const eventLocationRepo = new EventLocationRepository(AppDataSource.getRepositor
 const eventLocationService = new EventLocationService(eventLocationRepo);
 const eventLocationController = new EventLocationController(eventLocationService);
 
-const socketService = new SocketService(io);
-const socketController = new SocketController(io);
-const socketRoutes = new SocketRoutes(socketController);
-
 app.use(express.json());
-// Rutas
-app.use("/api", socketRoutes.getRoutes());
-app.use('/api/events', new EventsRoute(eventController).getRouter());
-app.use('/api/locations', new LocationsRoute(locationController).getRouter());
-app.use('/api/event-locations', new EventLocationsRoute(eventLocationController).getRouter());
 
-io.on("connection", (socket) => {
-  socketService.handleConnection(socket);
-});
+app.use('/', new EventsRoute(eventController).getRouter());
+app.use('/locations', new LocationsRoute(locationController).getRouter());
+app.use('/event-locations', new EventLocationsRoute(eventLocationController).getRouter());
 
 httpServer.listen(port, () => {
   console.log(`running on port ${port}`);
