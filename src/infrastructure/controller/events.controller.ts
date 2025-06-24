@@ -128,7 +128,7 @@ export class EventController {
 
     async getPaginated(req: Request, res: Response) {
         try {
-            const page = Number(req.query.page);
+            const page = Number(req.query.page) - 1;
             const items = Number(req.query.items);
 
             if (page < 1 || items < 1) {

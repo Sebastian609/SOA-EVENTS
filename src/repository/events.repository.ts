@@ -14,20 +14,15 @@ export class EventRepository implements IBaseRepository<Event> {
         if (limit < 1 || offset < 0) {
             throw new Error("Invalid pagination parameters");
         }
+        const data = this.repository.createQueryBuilder("event")
+            .leftJoinAndSelect("event.eventLocations", "eventLocations")
+            .leftJoinAndSelect("eventLocations.location", "location")
+            .where("event.deleted = :deleted", { deleted: false })
+            .where("location.deleted = :deleted", { deleted: false })
+            .orderBy("event.createdAt", "DESC")
+            .skip(offset)
+            .take(limit);
 
-        const [data] = await this.repository.findAndCount({
-            skip: offset,
-            take: limit,
-            relations: {
-            eventLocations: true, // Si deseas incluir la relación con eventLocations
-            },
-            order: {
-            createdAt: "DESC",
-            },
-            where: {
-            deleted: false,
-            },
-        });
 
         const count = await this.repository.count({
             where: {
