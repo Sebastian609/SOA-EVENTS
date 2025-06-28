@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { createServer } from "http";
 import { AppDataSource } from "./infrastructure/database/database";
 import { setupSwagger } from "./config/swagger";
@@ -25,6 +26,10 @@ import { EventLocationsRoute } from './routes/event_locations.routes';
 
 const port = process.env.PORT;
 const app = express();
+
+// ✅ Habilitar CORS para todos los orígenes
+app.use(cors({ origin: "*", credentials: true }));
+
 const httpServer = createServer(app);
 setupSwagger(app);
 
@@ -43,9 +48,9 @@ const eventLocationController = new EventLocationController(eventLocationService
 
 app.use(express.json());
 
-app.use('/', new EventsRoute(eventController).getRouter());
-app.use('/locations', new LocationsRoute(locationController).getRouter());
-app.use('/event-locations', new EventLocationsRoute(eventLocationController).getRouter());
+app.use('/api/events', new EventsRoute(eventController).getRouter());
+app.use('/api/events/locations', new LocationsRoute(locationController).getRouter());
+app.use('/api/events/event-locations', new EventLocationsRoute(eventLocationController).getRouter());
 
 httpServer.listen(port, () => {
   console.log(`running on port ${port}`);

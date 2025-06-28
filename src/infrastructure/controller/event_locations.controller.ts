@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import { EventLocationService } from '../../service/event_locations.service';
 import { CreateEventLocationDto, UpdateEventLocationDto } from '../dto/event_locations.dto';
-import { plainToInstance } from "class-transformer";
+import { instanceToPlain, plainToInstance } from "class-transformer";
 
 export class EventLocationController {
 
@@ -114,19 +114,25 @@ export class EventLocationController {
         }
     }
 
-    async getPaginated(req: Request, res: Response) {
-        try {
-            const page = Number(req.query.page) - 1;
-            const items = Number(req.query.items);
 
-            if (page < 0 || items < 1) {
-                throw new Error("Invalid pagination parameters");
-            }
+async getPaginated(req: Request, res: Response) {
+    try {
+        const page = Number(req.query.page) - 1;
+        const items = Number(req.query.items);
 
-            const result = await this.eventLocationService.getPaginated(page, items);
-            res.status(200).json(result);
-        } catch (error) {
-            res.status(400).json({ message: error.message })
+        if (page < 0 || items < 1) {
+            throw new Error("Invalid pagination parameters");
         }
+
+        const result = await this.eventLocationService.getPaginated(page, items);
+
+        // 🔒 Eliminar ciclos y metadatos
+        const safeResult = instanceToPlain(result)
+
+        res.status(200).json(safeResult);
+    } catch (error) {
+        res.status(400).json({ message: error.message })
     }
+}
+
 }

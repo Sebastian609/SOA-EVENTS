@@ -49,7 +49,18 @@ export class EventLocationRepository implements IBaseRepository<EventLocation> {
     }
 
     async findById(id: number): Promise<EventLocation> {
-        const eventLocation = this.repository.findOneBy({ id });
+        const eventLocation = 
+        this.repository.createQueryBuilder("eventLocation").
+        leftJoinAndSelect("eventLocation.event","event").
+        leftJoinAndSelect("eventLocation.location","location").
+        where("event.isActive = true").
+        andWhere("event.deleted = false").
+        andWhere("location.isActive = true").
+        andWhere("location.deleted = false").
+        andWhere("eventLocation.id = :id", {id: id}).
+        getOneOrFail();
+
+
         if (!eventLocation) {
             throw new Error(`Event-location with ID ${id} not found`);
         }
