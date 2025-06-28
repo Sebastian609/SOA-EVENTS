@@ -1,115 +1,101 @@
-import { Repository, DeleteResult, UpdateResult } from 'typeorm';
-import { Event } from '../infrastructure/entity/events.entity';
-import { IBaseRepository } from './base-repository.interface';
+import { Repository, DeleteResult, UpdateResult } from "typeorm";
+import { Event } from "../infrastructure/entity/events.entity";
+import { IBaseRepository } from "./base-repository.interface";
 
 export class EventRepository implements IBaseRepository<Event> {
+  private readonly repository: Repository<Event>;
 
-    private readonly repository: Repository<Event>
+  public constructor(_repository: Repository<Event>) {
+    this.repository = _repository;
+  }
 
-    public constructor(_repository: Repository<Event>) {
-        this.repository = _repository;
+  async getPaginated(limit: number, offset: number): Promise<any> {
+    if (limit < 1 || offset < 0) {
+      throw new Error("Invalid pagination parameters");
     }
+    const [data, count] = await this.repository.findAndCount({
+      where: {
+        isActive: true,
+        deleted: false,
+      },
+      relations: ["eventLocations", "eventLocations.location"], // <- aquí se cargan las relaciones
+    });
 
-    async getPaginated(limit: number, offset: number): Promise<any> {
-        if (limit < 1 || offset < 0) {
-            throw new Error("Invalid pagination parameters");
-        }
+   
 
-        const [data] = await this.repository.findAndCount({
-            skip: offset,
-            take: limit,
-            relations: {
-            eventLocations: true, // Si deseas incluir la relación con eventLocations
-            },
-            order: {
-            createdAt: "DESC",
-            },
-            where: {
-            deleted: false,
-            },
-        });
+    const response = {
+      locations: data,
+      count: count,
+    };
 
-        const count = await this.repository.count({
-            where: {
-                deleted: false,
-            },
-        });
+    return response;
+  }
 
-        const response = {
-            locations: data,
-            count: count,
-        };
+  async findAll(): Promise<Event[]> {
+    return this.repository.find();
+  }
 
-        return response;
+  async findById(id: number): Promise<Event> {
+    const event = await this.repository.findOneBy({ id });
+    if (!event) {
+      throw new Error(`Event with ID ${id} not found`);
     }
+    return event;
+  }
 
+  async findByCriteria(criteria: Partial<Event>): Promise<Event[]> {
+    return this.repository.find({ where: criteria });
+  }
 
-    async findAll(): Promise<Event[]> {
-        return this.repository.find();
-    }
+  async create(entity: Partial<Event>): Promise<Event> {
+    const newEvent = this.repository.create(entity);
+    return this.repository.save(newEvent);
+  }
 
-    async findById(id: number): Promise<Event> {
-        const event = await this.repository.findOneBy({ id });
-        if (!event) {
-            throw new Error(`Event with ID ${id} not found`);
-        }
-        return event;
-    }
+  async update(id: number, entity: Partial<Event>): Promise<Event> {
+    await this.repository.update(id, entity);
+    const updatedEvent = await this.findById(id);
+    return updatedEvent;
+  }
 
-    async findByCriteria(criteria: Partial<Event>): Promise<Event[]> {
-        return this.repository.find({ where: criteria });
-    }
+  async delete(id: number): Promise<DeleteResult> {
+    return this.repository.delete(id);
+  }
 
-    async create(entity: Partial<Event>): Promise<Event> {
-        const newEvent = this.repository.create(entity);
-        return this.repository.save(newEvent);
-    }
+  async softDelete(id: number): Promise<UpdateResult> {
+    return this.repository.update(id, { deleted: true });
+  }
 
-    async update(id: number, entity: Partial<Event>): Promise<Event> {
-        await this.repository.update(id, entity);
-        const updatedEvent = await this.findById(id);
-        return updatedEvent;
-    }
+  async restore(id: number): Promise<UpdateResult> {
+    return this.repository.restore(id);
+  }
 
-    async delete(id: number): Promise<DeleteResult> {
-        return this.repository.delete(id);
-    }
+  async count(criteria?: Partial<Event>): Promise<number> {
+    return this.repository.count({ where: criteria });
+  }
 
-    async softDelete(id: number): Promise<UpdateResult> {
-        return this.repository.update(id, { deleted: true });
-    }
+  // Métodos específicos para Event
+  async findByName(name: string): Promise<Event | null> {
+    return this.repository.findOne({ where: { name } });
+  }
 
-    async restore(id: number): Promise<UpdateResult> {
-        return this.repository.restore(id);
-    }
+  async findByStartDate(date: Date): Promise<Event[]> {
+    return this.repository.find({ where: { startDate: date } });
+  }
 
-    async count(criteria?: Partial<Event>): Promise<number> {
-        return this.repository.count({ where: criteria });
-    }
+  async findBySaleStart(date: Date): Promise<Event[]> {
+    return this.repository.find({ where: { saleStart: date } });
+  }
 
-    // Métodos específicos para Event
-    async findByName(name: string): Promise<Event | null> {
-        return this.repository.findOne({ where: { name } });
-    }
+  async findActive(): Promise<Event[]> {
+    return this.repository.find({ where: { isActive: true, deleted: false } });
+  }
 
-    async findByStartDate(date: Date): Promise<Event[]> {
-        return this.repository.find({ where: { startDate: date } });
-    }
+  async activate(id: number): Promise<void> {
+    await this.repository.update(id, { isActive: true });
+  }
 
-    async findBySaleStart(date: Date): Promise<Event[]> {
-        return this.repository.find({ where: { saleStart: date } });
-    }
-
-    async findActive(): Promise<Event[]> {
-        return this.repository.find({ where: 
-            { isActive: true, deleted: false } });
-    }
-
-    async activate(id: number): Promise<void> {
-        await this.repository.update(id, { isActive: true });
-    }
-
-    async deactivate(id: number): Promise<void> {
-        await this.repository.update(id, { isActive: false });
-    }
+  async deactivate(id: number): Promise<void> {
+    await this.repository.update(id, { isActive: false });
+  }
 }
