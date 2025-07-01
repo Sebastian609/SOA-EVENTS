@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { EventService } from '../../service/events.service';
 import { CreateEventDto, UpdateEventDto } from '../dto/events.dto';
 import { plainToInstance } from "class-transformer";
+import { log } from 'node:console';
 
 export class EventController {
 
@@ -51,7 +52,7 @@ export class EventController {
 
     async getEventsByStartDate(req: Request, res: Response) {
         try {
-            const startDate = new Date(req.query.date as string);
+            const startDate = new Date(req.query.startDate as string);
             const events = await this.eventService.getEventsByStartDate(startDate);
             res.status(200).json(events);
         } catch (error) {
@@ -61,7 +62,7 @@ export class EventController {
 
     async getEventsBySaleStart(req: Request, res: Response) {
         try {
-            const saleStart = new Date(req.query.date as string);
+            const saleStart = new Date(req.query.saleStartDate as string);
             const events = await this.eventService.getEventsBySaleStart(saleStart);
             res.status(200).json(events);
         } catch (error) {
@@ -128,17 +129,19 @@ export class EventController {
 
     async getPaginated(req: Request, res: Response) {
         try {
-            const page = Number(req.query.page) - 1;
-            const items = Number(req.query.items);
+            const page = Number(req.query.page) || 1;
+            const limit = Number(req.query.limit) || 10;
 
-            if (page < 0 || items < 1) {
-                throw new Error("Invalid pagination parameters");
+            if (page < 1 || limit < 1) {
+                return res.status(400).json({ 
+                    message: "Invalid pagination parameters. Page and limit must be greater than 0." 
+                });
             }
 
-            const result = await this.eventService.getPaginated(page, items);
+            const result = await this.eventService.getPaginated(page - 1, limit);
             res.status(200).json(result);
         } catch (error) {
-            res.status(400).json({ message: error.message })
+            res.status(400).json({ message: error.message });
         }
     }
 }

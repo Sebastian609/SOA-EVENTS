@@ -13,15 +13,18 @@ export async function getPaginated<T>(
     repo.count({ deleted: false }),
   ]);
 
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const currentPage = page + 1;
+
   return {
-    response: items,
+    data: items,
     pagination: {
-      currentPage: page+ 1,
+      currentPage: currentPage,
       itemsPerPage: itemsPerPage,
       totalItems: totalCount,
-      totalPages: Math.ceil(totalCount / itemsPerPage),
-      hasNextPage: (page + 1) * itemsPerPage < totalCount,
-      hasPreviousPage: page > 0,
+      totalPages: totalPages,
+      hasNextPage: currentPage < totalPages,
+      hasPreviousPage: currentPage > 1,
     },
   };
 }

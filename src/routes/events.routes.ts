@@ -15,7 +15,7 @@ export class EventsRoute {
     private initializeRoutes(): void {
         this.router.get('/', (req, res) => this.eventController.getAllEvents(req, res));
         this.router.get('/active', (req, res) => this.eventController.getActiveEvents(req, res));
-        this.router.get('/paginated', (req, res) => this.eventController.getPaginated(req, res));
+        this.router.post('/paginated', this.eventController.getPaginated.bind(this.eventController));
         this.router.get('/name/:name', (req, res) => this.eventController.getEventByName(req, res));
         this.router.get('/start-date', (req, res) => this.eventController.getEventsByStartDate(req, res));
         this.router.get('/sale-start', (req, res) => this.eventController.getEventsBySaleStart(req, res));

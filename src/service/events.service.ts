@@ -65,6 +65,8 @@ export class EventService {
     }
 
     async getPaginated(page: number, itemsPerPage: number) {
+
+        
         return getPaginated<Event>(this.eventRepository,page,itemsPerPage);
     }
 }

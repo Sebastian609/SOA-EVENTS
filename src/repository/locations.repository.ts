@@ -10,16 +10,16 @@ export class LocationRepository implements IBaseRepository<Location> {
         this.repository = _repository;
     }
 
-    async getPaginated(limit: number, offset: number): Promise<any> {
+    async getPaginated(limit: number, offset: number): Promise<Location[]> {
         if (limit < 1 || offset < 0) {
             throw new Error("Invalid pagination parameters");
         }
 
-        const [data] = await this.repository.findAndCount({
+        return this.repository.find({
             skip: offset,
             take: limit,
             relations: {
-                eventLocations: true, // si deseas incluir relaciones con EventLocation
+                eventLocations: true,
             },
             order: {
                 createdAt: "DESC",
@@ -28,19 +28,6 @@ export class LocationRepository implements IBaseRepository<Location> {
                 deleted: false,
             },
         });
-
-        const count = await this.repository.count({
-            where: {
-                deleted: false,
-            },
-        });
-
-        const response = {
-            locations: data,
-            count: count,
-        };
-
-        return response;
     }
 
     async findAll(): Promise<Location[]> {
@@ -48,7 +35,7 @@ export class LocationRepository implements IBaseRepository<Location> {
     }
 
     async findById(id: number): Promise<Location> {
-        const location = this.repository.findOneBy({ id });
+        const location = await this.repository.findOneBy({ id });
         if (!location) {
             throw new Error(`Location with ID ${id} not found`);
         }
@@ -81,6 +68,7 @@ export class LocationRepository implements IBaseRepository<Location> {
     async restore(id: number): Promise<UpdateResult> {
         return this.repository.restore(id);
     }
+    
     async count(criteria?: Partial<Location>): Promise<number> {
         return this.repository.count({ where: criteria });
     }

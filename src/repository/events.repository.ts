@@ -9,26 +9,20 @@ export class EventRepository implements IBaseRepository<Event> {
     this.repository = _repository;
   }
 
-  async getPaginated(limit: number, offset: number): Promise<any> {
+  async getPaginated(limit: number, offset: number): Promise<Event[]> {
     if (limit < 1 || offset < 0) {
       throw new Error("Invalid pagination parameters");
     }
-    const [data, count] = await this.repository.findAndCount({
+
+    return this.repository.find({
       where: {
         isActive: true,
         deleted: false,
       },
-      relations: ["eventLocations", "eventLocations.location"], // <- aquí se cargan las relaciones
+      relations: ["eventLocations", "eventLocations.location"],
+      skip: offset,
+      take: limit
     });
-
-   
-
-    const response = {
-      locations: data,
-      count: count,
-    };
-
-    return response;
   }
 
   async findAll(): Promise<Event[]> {

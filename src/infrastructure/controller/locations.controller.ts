@@ -127,15 +127,16 @@ export class LocationController {
 
     async getPaginated(req: Request, res: Response) {
         try {
-            const { page, items } = req.query;
-            const parsedPage = Number(page) - 1;
-            const parsedItems = Number(items);
+            const page = Number(req.query.page) || 1;
+            const limit = Number(req.query.limit) || 10;
 
-            if (parsedPage < 0 || parsedItems < 1) {
-                throw new Error("Wrong data");
+            if (page < 1 || limit < 1) {
+                return res.status(400).json({ 
+                    message: "Invalid pagination parameters. Page and limit must be greater than 0." 
+                });
             }
 
-            const result = await this.locationService.getPaginated(parsedPage, parsedItems);
+            const result = await this.locationService.getPaginated(page - 1, limit);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ message: error.message });

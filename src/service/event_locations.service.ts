@@ -57,5 +57,9 @@ export class EventLocationService {
     async getPaginated(page: number, itemsPerPage: number) {
         return getPaginated<EventLocation>(this.eventLocationRepository, page, itemsPerPage);
     }
+
+    async isAvailable(id: number): Promise<EventLocation> {
+        return this.eventLocationRepository.isAvailable(id);
+    }
     
 }
