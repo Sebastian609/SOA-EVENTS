@@ -10,38 +10,25 @@ export class EventLocationRepository implements IBaseRepository<EventLocation> {
         this.repository = _repository;
     }
     
-    async getPaginated(limit: number, offset: number): Promise<any> {
+    async getPaginated(limit: number, offset: number): Promise<EventLocation[]> {
         if (limit < 1 || offset < 0) {
             throw new Error("Invalid pagination parameters");
         }
 
-        const [data] = await this.repository.findAndCount({
+        return this.repository.find({
             skip: offset,
             take: limit,
             relations: {
-            event: true,
-            location: true,
+                event: true,
+                location: true,
             },
             order: {
-            createdAt: "DESC",
+                createdAt: "DESC",
             },
-            where: {
-            deleted: false,
-            },
-        });
-
-        const count = await this.repository.count({
             where: {
                 deleted: false,
             },
         });
-
-        const response = {
-            locations: data,
-            count: count,
-        };
-
-        return response;
     }
 
     async findAll(): Promise<EventLocation[]> {
@@ -49,17 +36,10 @@ export class EventLocationRepository implements IBaseRepository<EventLocation> {
     }
 
     async findById(id: number): Promise<EventLocation> {
-        const eventLocation = 
-        this.repository.createQueryBuilder("eventLocation").
-        leftJoinAndSelect("eventLocation.event","event").
-        leftJoinAndSelect("eventLocation.location","location").
-        where("event.isActive = true").
-        andWhere("event.deleted = false").
-        andWhere("location.isActive = true").
-        andWhere("location.deleted = false").
-        andWhere("eventLocation.id = :id", {id: id}).
-        getOneOrFail();
-
+        const eventLocation = await this.repository.findOne({
+            where: { id },
+            relations: ['event', 'location']
+        });
 
         if (!eventLocation) {
             throw new Error(`Event-location with ID ${id} not found`);
@@ -123,6 +103,25 @@ export class EventLocationRepository implements IBaseRepository<EventLocation> {
             relations: ['location'],
             });
     }
+
+   // Versión ligeramente más optimizada (no selecciona los datos, solo los une para filtrar)
+async isAvailable(id: number): Promise<EventLocation> {
+    const eventLocation = await this.repository.createQueryBuilder("event_location")
+        .leftJoinAndSelect("event_location.event", "event")
+        .leftJoinAndSelect("event_location.location", "location")
+        .where("event_location.isActive = true")
+        .andWhere("event_location.deleted = false")
+        .andWhere("event.isActive = true")
+        .andWhere("event.deleted = false")
+        .andWhere("location.isActive = true")
+        .andWhere("location.deleted = false")
+        .andWhere("event.saleStart <= NOW()")
+        .andWhere("event.saleEnd > NOW()")
+        .andWhere("event_location.id = :id", { id: id })
+        .getOneOrFail();
+
+    return eventLocation;
+}
 
     async activate(id: number): Promise<void> {
         await this.repository.update(id, { isActive: true });
