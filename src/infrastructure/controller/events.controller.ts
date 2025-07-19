@@ -130,15 +130,15 @@ export class EventController {
     async getPaginated(req: Request, res: Response) {
         try {
             const page = Number(req.query.page) || 1;
-            const limit = Number(req.query.limit) || 10;
+            const items = Number(req.query.limit) || 10;
 
-            if (page < 1 || limit < 1) {
+            if (page < 1 || items < 1) {
                 return res.status(400).json({ 
-                    message: "Invalid pagination parameters. Page and limit must be greater than 0." 
+                    message: "Invalid pagination parameters. Page and items must be greater than 0." 
                 });
             }
 
-            const result = await this.eventService.getPaginated(page - 1, limit);
+            const result = await this.eventService.getPaginated(page - 1, items);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ message: error.message });
