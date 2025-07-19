@@ -1,5 +1,8 @@
 import { DataSource } from "typeorm";
 import { config } from 'dotenv';
+import { Event } from "../entity/events.entity";
+import { Location } from "../entity/locations.entity";
+import { EventLocation } from "../entity/event_locations.entity";
 
 config(); // Cargar variables del archivo .env
 
@@ -13,7 +16,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize: false,
   logging: true,
-  entities: ["src/infrastructure/entity/**/*.ts"],
+  entities: [Event,Location,EventLocation],
   migrations: [],
   subscribers: [],
 });
