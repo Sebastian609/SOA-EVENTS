@@ -28,7 +28,7 @@ const port = process.env.PORT;
 const app = express();
 
 // ✅ Habilitar CORS para todos los orígenes
-app.use(cors({ origin: "*", credentials: true }));
+app.use(cors({ origin: "*"}));
 
 const httpServer = createServer(app);
 setupSwagger(app);
