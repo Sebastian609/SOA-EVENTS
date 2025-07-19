@@ -63,7 +63,6 @@ export class EventLocationController {
     async createEventLocation(req: Request, res: Response) {
         try {
             const data: CreateEventLocationDto = req.body;
-            console.log(data.eventId + " - " + data.locationId + " - " + data.name + " - " + data.price);
             const created = await this.eventLocationService.createEventLocation(data);
             res.status(201).json(created);
         } catch (error) {

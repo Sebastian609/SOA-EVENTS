@@ -33,8 +33,7 @@ export class SocketController {
 
   public sendBroadcast(req: Request, res: Response): any {
     const { title, content, saleId } = req.body;
-    console.log(req.body);
-    
+  
 
     if (!title || !content || !saleId) {
       return res.status(400).json({ error: "Faltan datos", status: false });
