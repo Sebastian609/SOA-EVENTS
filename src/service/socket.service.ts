@@ -17,7 +17,7 @@ export class SocketService implements ISocketService {
     }
 
     public handleConnection(socket: Socket): void {
-        console.log(`Cliente conectado: ${socket.id}`);
+        console.log(`Cliente conectado : ${socket.id}`);
     }
 
     public sendMessageToUser(userId: string, message: string): void {
